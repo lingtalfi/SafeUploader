@@ -44,7 +44,7 @@ The configuration file structure
         - ?dir: string=/tmp/SafeUploader
         
                 The dir in which the uploaded file should be put.
-                You can pass some data (called payload in this planet) along with the file upload, 
+                You can pass some data (called payload in this planet) using $_GET along with the file upload, 
                 and use those data as tags (wrapped with curly brackets).
                 For instance, if you pass id=5, you can use the tag "{id}" in your dir path (i.e. /tmp/mypath/{id}).
                 
