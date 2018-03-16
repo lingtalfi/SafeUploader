@@ -41,6 +41,22 @@ The configuration file structure
 
 - conf
     - profiles, array of profileId => profile, each profile having the following structure
+        - ?moveHandler: callback ( SafeUploader $uploader, array $verifiedPhpFile, array $payload )
+            You can handle the moving of the file with a custom callback.
+            If you use this technique, then the following properties become obsolete:
+                - dir  
+                - file  
+                - thumbs                
+            Note that you can/should use the setRealUrl method of the SafeUploader instance,
+            and return directly the real url expected by the js handler.
+            This is the new way of doing things. It has the benefit that you can execute some action like inserting
+            the url in the database, plus you have more control on the path (the default tag system doesn't provide
+            a natural mechanism for handling hashed paths for instance like /1/5/8/3/product.png).
+            Call setUrl from your moveHandler when you are ready...
+            
+            Note: when the moveHandler callback is executed, all checks defined in your profile have been
+            verified first, so you can safely upload the file without re-checking for file errors.
+            
         - ?dir: string=/tmp/SafeUploader
         
                 The dir in which the uploaded file should be put.
@@ -94,6 +110,14 @@ The configuration file structure
                 - m: mega bytes
                 - mb: alias for mega bytes
                 - mo: alias for mega bytes
+        - ?returnType: string|null
+            Controls the return of the ajax service. 
+            This is optional.
+            the default value is null, which has the same effect as "path".
+            Possible values are the following:
+            - path: the file path will be returned   
+            - url: the url will be returned
+           
                 
                 
 Playground for SafeUploader
@@ -236,10 +260,66 @@ $conf = [
              * Wild card is allowed in the second part of the mime type (after the slash)
              */
             'acceptedMimeType' => null,
+            /**
+            * Controls the return of the ajax service. 
+            * 
+            * This is optional.
+            * the default value is null, which has the same effect as path.
+            * Possible values are the following:
+            * - path: the file path will be returned   
+            * - url: the url will be returned
+            */
+            'returnType' => 'url',
         ],
     ],
 ];
 ```
+
+Another example of config using the moveHandler:
+
+```php
+        'cardImage' => [
+            'moveHandler' => function (SafeUploader $uploader, array $phpFile, array $payload) {
+                if (array_key_exists("product_card_id", $payload)) {
+                    $cardId = $payload['product_card_id'];
+                    $dstDir = sys_get_temp_dir() . "/safe-uploader";
+
+                    if (!file_exists($dstDir)) {
+                        FileSystemTool::mkdir($dstDir, 0777, true);
+                    }
+                    $dstFile = $dstDir . "/" . $phpFile['name'];
+                    if (move_uploaded_file($phpFile['tmp_name'], $dstFile)) {
+
+                        // create thumbnails
+                        $o = new ImageLayer();
+                        $paths = $o->createImageCopy($dstFile, "cards", $cardId);
+
+
+                        // now make the ajax service return the medium url
+                        foreach ($paths as $path) {
+                            if (false !== strpos($path, '/medium/')) {
+                                $url = str_replace(A::appDir() . '/www/', '', $path);
+                                $url = '/' . ltrim($url, '/');
+                                $uploader->setRealUrl($url);
+                                break;
+                            }
+                        }
+
+
+                    } else {
+                        throw new EkomException("Could not move the file with product_card_id=$cardId");
+                    }
+                } else {
+                    throw new EkomException("product card id not defined in payload");
+                }
+            },
+            'isImage' => true,
+            'maxSize' => '2M',
+            'returnType' => 'url',
+        ],
+```
+
+
 
 And then the main script:
 
@@ -317,6 +397,10 @@ in the "/doc/ajax-upload-pattern.md" file of this repository.
 
                     $payload = (array_key_exists("payload", $_GET)) ? $_GET['payload'] : [];
                     $profileId = $_GET['profile_id'];
+                    /**
+                     * return type: null (ekom default) | url (used by trumbowyg
+                     */
+                    $returnType = array_key_exists("return_type", $_GET) ? $_GET['return_type'] : null;
 
 
                     // upload the file
@@ -327,21 +411,93 @@ in the "/doc/ajax-upload-pattern.md" file of this repository.
 
 
                     $errors = $o->getErrors();
+                    $profile = $o->getProfile();
+                    if (null === $returnType) {
+                        if (array_key_exists("returnType", $profile)) {
+                            $returnType = $profile['returnType'];
+                        }
+                    }
+
+
                     if (count($errors)) {
-                        $output->error("The following errors occurred: " . ArrayToStringTool::toPhpArray($errors));
+
+
+                        if ('url' === $returnType) {
+                            $out = [
+                                'success' => false,
+                                'url' => "",
+                            ];
+                        } else {
+                            $output->error("The following errors occurred: " . ArrayToStringTool::toPhpArray($errors));
+                        }
+
                     } else {
                         $realPath = $o->getUploadedFilePath();
                         $realPaths = $o->getUploadedFilePaths();
-                        $out = [
-                            'path' => $realPath,
-                        ];
-                        /**
-                         * now if it's insert mode,
-                         * we also want to save the random string ric into the session.
-                         */
-                        $isTmp = (bool)$payload['isTmp']; // isTmp is defined and passed by the SokoSafeUploadControl form control
-                        if (true === $isTmp) {
-                            SafeUploaderHelperTool::setTemporaryValue($profileId, $realPaths, $payload['ric']);
+
+
+                        if ('url' === $returnType) {
+
+                            $realUrl = $o->getRealUrl();
+                            if (null !== $realUrl) {
+                                $out = [
+                                    'success' => true,
+                                    'url' => $realUrl,
+                                ];
+
+                            } else {
+
+
+                                $isFailure = false;
+                                $realUrl = $realPath;
+                                $webDir = A::appDir() . '/www';
+                                if (0 === strpos($realPath, $webDir)) {
+                                    $realUrlSuffix = str_replace($webDir, '', $realUrl);
+                                    $realUrl = UriTool::uri($realUrlSuffix, [], true, true);
+                                } else {
+                                    // create a symlink if possible
+                                    $extension = FileSystemTool::getFileExtension($realPath);
+                                    $uniqueId = HashTool::getRandomHash64();
+                                    if ($extension) {
+                                        $uniqueId .= '.' . $extension;
+                                    }
+                                    $realUrl = UriTool::uri('/uploads/' . $uniqueId, [], true, true);
+                                    $link = $webDir . "/uploads/$uniqueId";
+                                    if (false === symlink($realPath, $link)) {
+                                        $isFailure = true;
+                                    }
+                                }
+
+                                if (false === $isFailure) {
+
+                                    $out = [
+                                        'success' => true,
+                                        'url' => $realUrl,
+                                    ];
+                                } else {
+                                    $out = [
+                                        'success' => false,
+                                        'url' => "",
+                                    ];
+                                }
+                            }
+                        } else {
+                            $out = [
+                                'path' => $realPath,
+                            ];
+                        }
+
+
+                        $isTmp = false;
+                        if (array_key_exists("isTmp", $payload)) {
+                            /**
+                             * now if it's insert mode,
+                             * we also want to save the random string ric into the session.
+                             */
+                            $isTmp = (bool)$payload['isTmp']; // isTmp is defined and passed by the SokoSafeUploadControl form control
+                            if (true === $isTmp) {
+                                SafeUploaderHelperTool::setTemporaryValue($profileId, $realPaths, $payload['ric']);
+                            }
                         }
                     }
                 } else {
@@ -412,6 +568,10 @@ Here is an example of where this line should be in a morphic implementation
 
 History Log
 ------------------
+    
+- 1.1.0 -- 2018-03-16
+
+    - add SafeUploader.getRealUrl method    
     
 - 1.0.0 -- 2018-02-27
 
