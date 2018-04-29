@@ -120,6 +120,15 @@ The configuration file structure
             - path: the file path will be returned
             - url: the url will be returned
 
+            Note: this property is handled at the ajax service level
+
+        - `?absoluteUrl`: bool=true
+            Works only if `returnType`'s value is `url`.
+            This is optional.
+            If true, the returned url will be in absolute form (i.e. with the domain name prefix),
+            otherwise it will be in relative form (starting with a forward slash)
+
+            Note: this property is handled at the ajax service level
 
 
 Playground for SafeUploader
