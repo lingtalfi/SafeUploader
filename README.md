@@ -39,87 +39,89 @@ The configuration file structure
 ============================
 
 
-- conf
-    - profiles, array of profileId => profile, each profile having the following structure
-        - ?moveHandler: callback ( SafeUploader $uploader, array $verifiedPhpFile, array $payload )
+- `conf`
+    - `profiles`, array of profileId => profile, each profile having the following structure
+        - `?moveHandler`: callback ( SafeUploader $uploader, array $verifiedPhpFile, array $payload )
             You can handle the moving of the file with a custom callback.
             If you use this technique, then the following properties become obsolete:
-                - dir  
-                - file  
-                - thumbs                
-            Note that you can/should use the setRealUrl method of the SafeUploader instance,
-            and return directly the real url expected by the js handler.
-            This is the new way of doing things. It has the benefit that you can execute some action like inserting
-            the url in the database, plus you have more control on the path (the default tag system doesn't provide
-            a natural mechanism for handling hashed paths for instance like /1/5/8/3/product.png).
-            Call setUrl from your moveHandler when you are ready...
-            
+            - dir
+            - file
+            - thumbs
+
+        Note that you can/should use the `setRealUrl` method of the SafeUploader instance,
+        and return directly the real url expected by the js handler.
+        This is the new way of doing things. It has the benefit that you can execute some action like inserting
+        the url in the database, plus you have more control on the path (the default tag system doesn't provide
+        a natural mechanism for handling hashed paths for instance like /1/5/8/3/product.png).
+        Call setUrl from your moveHandler when you are ready...
+
             Note: when the moveHandler callback is executed, all checks defined in your profile have been
             verified first, so you can safely upload the file without re-checking for file errors.
-            
-        - ?dir: string=/tmp/SafeUploader
-        
-                The dir in which the uploaded file should be put.
-                You can pass some data (called payload in this planet) using $_GET along with the file upload, 
-                and use those data as tags (wrapped with curly brackets).
-                For instance, if you pass id=5, you can use the tag "{id}" in your dir path (i.e. /tmp/mypath/{id}).
-                
-        - ?file: string=null,
-                
-                If null, will look for the "_file" value in the payload.
-                If not defined, then the natural file name will be used.
-                
-                If string, will define the file name (it must not be empty).
-                It can use tags, like for dir (source for tags is the payload).
-                Note that if you use the uploadPhpFile method, the natural name
-                of the file ($_FILES[myfile][name]) will be automatically added
-                as "_file" in the payload.
-                
-        - ?thumbs: array=[]
-                        
-                Thumbs only applies if isImage is true.
-                It allows you to make copies of the original uploaded image.
-                The thumbs are usually smaller than the original, but they could be greater too, depending
-                on the image library installed on your system.
-                
-                Each item of thumbs is a thumbItem, which has the following structure:
-                     - ?maxWidth, if set this will be the maximum width of the image
-                     - ?maxHeight, if set this will be the maximum height of the image
-                     - ?preserveRatio=true, boolean. If set to false AND both maxWitdth and maxHeight are defined, then
-                                         maxWidth and maxHeight will actually be the exact width and height of the thumb,
-                                         it might distort the image.
-                     - ...more to come later probably (a naming function would be welcome...)
-                     
-        - ?isImage: bool=false
-                        
-                If set and true, will apply special image specific security restrictions to 
-                the uploaded file (i.e. the image will be regenerated to ensure it does not
-                contain a trojan horse).
-                                                            
-        - ?maxSize: string|false=2M
-                
-                If false, no maxSize checking will be done
-                The maximum size of the uploaded file.
-                The following filesize units can be used (case does NOT matter):
-                
-                - b: bytes
-                - o: octet, alias for bytes
-                - k: kilo bytes
-                - kb: alias for kilo bytes
-                - ko: alias for kilo bytes
-                - m: mega bytes
-                - mb: alias for mega bytes
-                - mo: alias for mega bytes
-        - ?returnType: string|null
-            Controls the return of the ajax service. 
+
+        - `?dir`: string=/tmp/SafeUploader
+
+            The dir in which the uploaded file should be put.
+            You can pass some data (called payload in this planet) using $_GET along with the file upload,
+            and use those data as tags (wrapped with curly brackets).
+            For instance, if you pass id=5, you can use the tag "{id}" in your dir path (i.e. /tmp/mypath/{id}).
+
+        - `?file`: string=null,
+
+            If null, will look for the "_file" value in the payload.
+            If not defined, then the natural file name will be used.
+
+            If string, will define the file name (it must not be empty).
+            It can use tags, like for dir (source for tags is the payload).
+            Note that if you use the uploadPhpFile method, the natural name
+            of the file ($_FILES[myfile][name]) will be automatically added
+            as "_file" in the payload.
+
+        - `?thumbs`: array=[]
+
+            Thumbs only applies if isImage is true.
+            It allows you to make copies of the original uploaded image.
+            The thumbs are usually smaller than the original, but they could be greater too, depending
+            on the image library installed on your system.
+
+            Each item of thumbs is a thumbItem, which has the following structure:
+             - `?maxWidth`, if set this will be the maximum width of the image
+             - `?maxHeight`, if set this will be the maximum height of the image
+             - `?preserveRatio`=true, boolean. If set to false AND both maxWitdth and maxHeight are defined, then
+                 maxWidth and maxHeight will actually be the exact width and height of the thumb,
+                 it might distort the image.
+             - ...more to come later probably (a naming function would be welcome...)
+
+        - `?isImage`: bool=false
+
+            If set and true, will apply special image specific security restrictions to
+            the uploaded file (i.e. the image will be regenerated to ensure it does not
+            contain a trojan horse).
+
+        - `?maxSize`: string|false=2M
+
+            If false, no maxSize checking will be done
+            The maximum size of the uploaded file.
+            The following filesize units can be used (case does NOT matter):
+
+            - b: bytes
+            - o: octet, alias for bytes
+            - k: kilo bytes
+            - kb: alias for kilo bytes
+            - ko: alias for kilo bytes
+            - m: mega bytes
+            - mb: alias for mega bytes
+            - mo: alias for mega bytes
+
+        - `?returnType`: string|null
+            Controls the return of the ajax service.
             This is optional.
             the default value is null, which has the same effect as "path".
             Possible values are the following:
-            - path: the file path will be returned   
+            - path: the file path will be returned
             - url: the url will be returned
-           
-                
-                
+
+
+
 Playground for SafeUploader
 =============================
 
@@ -261,12 +263,12 @@ $conf = [
              */
             'acceptedMimeType' => null,
             /**
-            * Controls the return of the ajax service. 
-            * 
+            * Controls the return of the ajax service.
+            *
             * This is optional.
             * the default value is null, which has the same effect as path.
             * Possible values are the following:
-            * - path: the file path will be returned   
+            * - path: the file path will be returned
             * - url: the url will be returned
             */
             'returnType' => 'url',
@@ -373,21 +375,21 @@ Hello there
 </html>
 
 ```
-                                                
-                
 
 
 
-Example ajax service 
+
+
+Example ajax service
 =====================================
 
 This example comes from the ekom module (in service/Ekom/ecp/api.php).
 It shows the server side script used to handle the ajax upload.
-This pattern is explained in more details 
+This pattern is explained in more details
 in the "/doc/ajax-upload-pattern.md" file of this repository.
 
 
- 
+
 
 ```php
         case "upload_handler":
@@ -508,12 +510,12 @@ in the "/doc/ajax-upload-pattern.md" file of this repository.
             }
             break;
 ```
-                                                
-                                
-                                
-                                                
+
+
+
+
 When the form is processed, clean the temporary paths
-================================                
+================================
 
 There is only one line to care about:
 
@@ -526,7 +528,7 @@ Here is an example of where this line should be in a morphic implementation
 (see the morphic form.config file for more information: https://github.com/lingtalfi/Kamille/blob/master/Utils/Morphic/Generator2/MorphicGenerator2.php )
 
 
-     
+
 ```php
     // ...
     'process' => function ($fData, SokoFormInterface $form) use ($isUpdate, $id) {
@@ -563,16 +565,16 @@ Here is an example of where this line should be in a morphic implementation
     // ...
 ```
 
-                           
+
 
 
 History Log
 ------------------
-    
+
 - 1.1.0 -- 2018-03-16
 
-    - add SafeUploader.getRealUrl method    
-    
+    - add SafeUploader.getRealUrl method
+
 - 1.0.0 -- 2018-02-27
 
-    - initial commit                                                
+    - initial commit
