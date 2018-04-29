@@ -580,6 +580,10 @@ Here is an example of where this line should be in a morphic implementation
 History Log
 ------------------
 
+- 1.2.0 -- 2018-04-29
+
+    - add profile absoluteUri configuration property
+
 - 1.1.0 -- 2018-03-16
 
     - add SafeUploader.getRealUrl method
