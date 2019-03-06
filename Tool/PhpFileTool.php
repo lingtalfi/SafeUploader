@@ -1,7 +1,7 @@
 <?php
 
 
-namespace SafeUploader\Tool;
+namespace Ling\SafeUploader\Tool;
 
 
 class PhpFileTool

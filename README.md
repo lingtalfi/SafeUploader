@@ -19,7 +19,7 @@ Install
 ==========
 Using the [uni](https://github.com/lingtalfi/universe-naive-importer) command.
 ```bash
-uni import SafeUploader
+uni import Ling/SafeUploader
 ```
 
 Or just download it and place it where you want otherwise.
@@ -340,7 +340,7 @@ And then the main script:
 
 
 use Core\Services\A;
-use SafeUploader\SafeUploader;
+use Ling\SafeUploader\SafeUploader;
 
 // using kamille framework here (https://github.com/lingtalfi/kamille)
 require_once __DIR__ . "/../boot.php";

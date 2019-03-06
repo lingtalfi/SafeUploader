@@ -1,7 +1,7 @@
 <?php
 
 
-namespace SafeUploader\Exception;
+namespace Ling\SafeUploader\Exception;
 
 
 class SafeUploaderException extends \Exception

@@ -1,11 +1,11 @@
 <?php
 
 
-namespace SafeUploader\Tool;
+namespace Ling\SafeUploader\Tool;
 
 
-use Bat\FileSystemTool;
-use Bat\SessionTool;
+use Ling\Bat\FileSystemTool;
+use Ling\Bat\SessionTool;
 use Kamille\Services\XConfig;
 
 class SafeUploaderHelperTool

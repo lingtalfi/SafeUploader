@@ -1,17 +1,17 @@
 <?php
 
 
-namespace SafeUploader;
+namespace Ling\SafeUploader;
 
 
-use Bat\DebugTool;
-use Bat\FileSystemTool;
-use Bat\MimeTypeTool;
-use BeeFramework\Bat\ConvertTool;
-use SafeUploader\Exception\SafeUploaderException;
-use SafeUploader\Tool\PhpFileTool;
-use SafeUploader\Tool\SafeUploaderHelperTool;
-use ThumbnailTools\ThumbnailTool;
+use Ling\Bat\DebugTool;
+use Ling\Bat\FileSystemTool;
+use Ling\Bat\MimeTypeTool;
+use Ling\BeeFramework\Bat\ConvertTool;
+use Ling\SafeUploader\Exception\SafeUploaderException;
+use Ling\SafeUploader\Tool\PhpFileTool;
+use Ling\SafeUploader\Tool\SafeUploaderHelperTool;
+use Ling\ThumbnailTools\ThumbnailTool;
 
 class SafeUploader
 {
